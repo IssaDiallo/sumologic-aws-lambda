@@ -1,0 +1,7 @@
+{
+  "InstallApp": "Yes",
+  "CreateCloudWatchMetricsSource": "Yes",
+  "CollectorName": "Install_Nested_Stack",
+  "CloudWatchMetricsSourceName": "My Source",
+  "CloudWatchMetricsSourceCategoryName": "Labs/tst/json"
+}

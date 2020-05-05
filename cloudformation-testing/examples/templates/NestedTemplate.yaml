@@ -27,6 +27,13 @@ Metadata:
           - CloudWatchMetricsSourceName
           - CloudWatchMetricsSourceCategoryName
 
+      - Label:
+          default: "Local Parameters. Do Not Edit the values."
+        Parameters:
+          - ParentStackName
+          - ServiceToken
+          - RoleArn
+
     ParameterLabels:
       SumoDeployment:
         default: "Sumo Logic Deployment Name"
@@ -50,6 +57,13 @@ Metadata:
         default: "Sumo Logic CloudWatch Metrics Source Name"
       CloudWatchMetricsSourceCategoryName:
         default: "Sumo Logic CloudWatch Metrics Source Category Name"
+
+      ParentStackName:
+        default: "If Any, Name of parent Stack"
+      ServiceToken:
+        default: "Service Token"
+      RoleArn:
+        default: "Role ARN"
 
 Parameters:
   SumoDeployment:
@@ -115,6 +129,19 @@ Parameters:
                   New - Default will be used if CloudWatch Metrics Source is Created"
     Default: AWS/Alb/CloudWatch/Metrics
 
+  ParentStackName:
+    Type: String
+    Default: "ParentStackName"
+    Description: Parent Stack Name. Do Not Edit the value.
+  ServiceToken:
+    Type: String
+    Default: "ServiceToken"
+    Description: Parent Stack Name. Do Not Edit the value.
+  RoleArn:
+    Type: String
+    Default: "RoleArn"
+    Description: Parent Stack Name. Do Not Edit the value.
+
 Mappings:
   RegionMap:
     us-east-1:
@@ -151,6 +178,8 @@ Mappings:
       bucketname: appdevzipfiles-sa-east-1
 
 Conditions:
+  do_not_use_parent_stack: !Equals [ !Ref ParentStackName, "ParentStackName"]
+
   install_app: !Equals [!Ref InstallApp, 'Yes']
   install_cloud_watch_metric_source: !Equals [!Ref CreateCloudWatchMetricsSource, 'Yes']
   install_collector: !Condition install_cloud_watch_metric_source
@@ -158,6 +187,7 @@ Conditions:
 Resources:
   SumoLogicHelperRole:
     Type: AWS::IAM::Role
+    Condition: do_not_use_parent_stack
     Properties:
       AssumeRolePolicyDocument:
         Version: '2012-10-17'
@@ -174,22 +204,14 @@ Resources:
             Statement:
               - Effect: Allow
                 Action:
-                  - tag:TagResources
-                  - tag:UntagResources
-                  - elasticloadbalancing:DescribeLoadBalancerAttributes
-                  - elasticloadbalancing:DescribeLoadBalancers
-                  - elasticloadbalancing:AddTags
-                  - elasticloadbalancing:RemoveTags
-                  - elasticloadbalancing:ModifyLoadBalancerAttributes
                   - logs:CreateLogGroup
                   - logs:CreateLogStream
                   - logs:PutLogEvents
-                  - s3:GetBucketPolicy
-                  - s3:PutBucketPolicy
                 Resource: '*'
 
   SumoLogicHelperFunction:
     Type: 'AWS::Serverless::Function'
+    Condition: do_not_use_parent_stack
     Properties:
       FunctionName: !Join
         - ""
@@ -215,6 +237,7 @@ Resources:
 
   SumoRole:
     Type: AWS::IAM::Role
+    Condition: do_not_use_parent_stack
     Properties:
       AssumeRolePolicyDocument:
         Version: '2012-10-17'
@@ -241,13 +264,18 @@ Resources:
                   - tag:GetResources
                   - cloudwatch:ListMetrics
                   - cloudwatch:GetMetricStatistics
-                Resource: !Ref CollectorName
+                Resource: "*"
 
   SumoHostedCollector:
     Type: Custom::Collector
     Condition: install_collector
     Properties:
-      ServiceToken: !GetAtt SumoLogicHelperFunction.Arn
+      ServiceToken: !If
+        - do_not_use_parent_stack
+        - !GetAtt
+          - SumoLogicHelperFunction
+          - Arn
+        - !Ref ServiceToken
       Region: !Ref "AWS::Region"
       CollectorType: Hosted
       RemoveOnDeleteStack: !Ref RemoveSumoResourcesOnDeleteStack
@@ -260,7 +288,12 @@ Resources:
     Condition: install_cloud_watch_metric_source
     Type: Custom::AWSSource
     Properties:
-      ServiceToken: !GetAtt SumoLogicHelperFunction.Arn
+      ServiceToken: !If
+        - do_not_use_parent_stack
+        - !GetAtt
+          - SumoLogicHelperFunction
+          - Arn
+        - !Ref ServiceToken
       Region: !Ref "AWS::Region"
       RemoveOnDeleteStack: !Ref RemoveSumoResourcesOnDeleteStack
       SourceType: AwsCloudWatch
@@ -272,34 +305,29 @@ Resources:
       SumoAccessID: !Ref SumoAccessID
       SumoAccessKey: !Ref SumoAccessKey
       SumoDeployment: !Ref SumoDeployment
-      RoleArn: !GetAtt SumoRole.Arn
+      RoleArn: !If
+        - do_not_use_parent_stack
+        - !GetAtt
+          - SumoRole
+          - Arn
+        - !Ref RoleArn
 
   sumoApp:
     Condition: install_app
     Type: Custom::App
     Properties:
-      ServiceToken: !GetAtt SumoLogicHelperFunction.Arn
+      ServiceToken: !If
+        - do_not_use_parent_stack
+        - !GetAtt
+          - SumoLogicHelperFunction
+          - Arn
+        - !Ref ServiceToken
       Region: !Ref "AWS::Region"
       AppName: "AWS Observability Alb App"
       RemoveOnDeleteStack: !Ref RemoveSumoResourcesOnDeleteStack
       AppSources:
         metricsrc: !If [install_cloud_watch_metric_source, !Sub "_sourceCategory=${CloudWatchMetricsSourceCategoryName}", "_sourceCategory=myconstantvalue"]
         logsrc: !If [install_cloud_watch_metric_source, !Sub "_sourceCategory=${CloudWatchMetricsSourceCategoryName}", "_sourceCategory=myanotherconstantvalue"]
-      SumoAccessID: !Ref SumoAccessID
-      SumoAccessKey: !Ref SumoAccessKey
-      SumoDeployment: !Ref SumoDeployment
-
-  sumoAnotherApp:
-    Condition: install_app
-    Type: Custom::App
-    Properties:
-      ServiceToken: !GetAtt SumoLogicHelperFunction.Arn
-      Region: !Ref "AWS::Region"
-      RemoveOnDeleteStack: !Ref RemoveSumoResourcesOnDeleteStack
-      AppName: "AWS Observability Alb App"
-      AppSources:
-        metricsrc: "_sourceCategory=myconstantvalue"
-        logsrc: "_sourceCategory=myanotherconstantvalue"
       SumoAccessID: !Ref SumoAccessID
       SumoAccessKey: !Ref SumoAccessKey
       SumoDeployment: !Ref SumoDeployment

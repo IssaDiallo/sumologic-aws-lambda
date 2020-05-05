@@ -23,9 +23,10 @@ class GenerateReport(object):
         skipped_cases = 0
 
         for test in self.test_json["Tests"]:
-            test_cases[test["TestName"]] = "PASS"
             if "Skip" in test and test["Skip"]:
                 skipped_cases = skipped_cases + 1
+            else:
+                test_cases[test["TestName"]] = "PASS"
 
         if self.data:
             for deployment_type, result in self.data.items():
@@ -49,7 +50,9 @@ class GenerateReport(object):
         total = passed_cases + failed_cases + skipped_cases
         if total != len(self.test_json["Tests"]):
             raise Exception(
-                "Issue with Report Generation as Total Test cases does not match Passed + Failed Test Cases")
+                "Issue with Report Generation as Total Test cases(%s) "
+                "does not match Passed(%s) + Failed(%s)+ Skipped(%s) Test Cases" % (
+                    total, passed_cases, failed_cases, skipped_cases))
 
         # Creating report data
         self.report = {"Template": self.test_json["Global"]["TemplatePath"], "Type": self.testing_type,
@@ -60,7 +63,8 @@ class GenerateReport(object):
 
         if self.generate_report:
             self.logger.info(
-                "Report for %s CloudFormation Testing is : \n %s" % (self.testing_type, json.dumps(self.report, indent=4)))
+                "Report for %s CloudFormation Testing is : \n %s" % (
+                    self.testing_type, json.dumps(self.report, indent=4)))
 
             # Create Result file
             with open("result.json", 'w') as parameter:

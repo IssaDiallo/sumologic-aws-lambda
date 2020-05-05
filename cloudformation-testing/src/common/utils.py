@@ -22,6 +22,11 @@ def get_absolute_path(relative_path, compare_file_path):
     return relative_path
 
 
+def read_file(file_path):
+    with open(file_path, "r") as f:
+        return f.read().strip()
+
+
 def load_json_file(file_full_path):
     """
     Load the given Test JSON file.

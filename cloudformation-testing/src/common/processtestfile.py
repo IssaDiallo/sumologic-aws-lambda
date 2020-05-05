@@ -77,5 +77,8 @@ class FileReader(object):
                 if "Assertions" in test:
                     assertions = test["Assertions"]
 
-                processed_data[test["TestName"]] = {"parameters": all_parameters, "assertions": assertions}
+                regions = test["Regions"]
+
+                processed_data[test["TestName"]] = {"parameters": all_parameters, "assertions": assertions,
+                                                    "regions": regions}
         return processed_data

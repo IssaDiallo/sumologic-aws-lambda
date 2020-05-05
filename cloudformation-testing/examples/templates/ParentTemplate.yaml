@@ -1,0 +1,259 @@
+AWSTemplateFormatVersion: '2010-09-09'
+Transform: 'AWS::Serverless-2016-10-31'
+Description: "Template to test the cloudformation testing framework."
+
+Metadata:
+  'AWS::CloudFormation::Interface':
+    ParameterGroups:
+      - Label:
+          default: "Sumo Logic Access Configuration (Required)"
+        Parameters:
+          - SumoDeployment
+          - SumoAccessID
+          - SumoAccessKey
+          - SumoOrganizationId
+          - RemoveSumoResourcesOnDeleteStack
+
+      - Label:
+          default: "App Details - Collector Configuration"
+        Parameters:
+          - InstallApp
+          - CollectorName
+
+      - Label:
+          default: "App Details - CloudWatch Metrics Source Configuration"
+        Parameters:
+          - CreateCloudWatchMetricsSource
+          - CloudWatchMetricsSourceName
+          - CloudWatchMetricsSourceCategoryName
+
+    ParameterLabels:
+      SumoDeployment:
+        default: "Sumo Logic Deployment Name"
+      SumoAccessID:
+        default: "Sumo Logic Access ID"
+      SumoAccessKey:
+        default: "Sumo Logic Access Key"
+      SumoOrganizationId:
+        default: "Sumo Logic Organization Id"
+      RemoveSumoResourcesOnDeleteStack:
+        default: "Delete Sumo Logic Resources when stack is deleted"
+
+      InstallApp:
+        default: "Install Sumo Logic App"
+      CollectorName:
+        default: "Collector Name"
+
+      CreateCloudWatchMetricsSource:
+        default: "Create Sumo Logic CloudWatch Metrics Source"
+      CloudWatchMetricsSourceName:
+        default: "Sumo Logic CloudWatch Metrics Source Name"
+      CloudWatchMetricsSourceCategoryName:
+        default: "Sumo Logic CloudWatch Metrics Source Category Name"
+
+Parameters:
+  SumoDeployment:
+    Type: String
+    AllowedValues:
+      - au
+      - ca
+      - de
+      - eu
+      - jp
+      - us2
+      - us1
+      - in
+      - fed
+    Description: "Enter au, ca, de, eu, jp, us2, in, fed or us1."
+  SumoAccessID:
+    Type: String
+    Description: The Sumo Logic Access ID.
+    AllowedPattern: ".+"
+  SumoAccessKey:
+    Type: String
+    Description: The Sumo Logic Access Key.
+    AllowedPattern: ".+"
+    NoEcho: true
+  SumoOrganizationId:
+    Type: String
+    Description: The Account Overview page displays information about your Sumo Logic organization.
+    AllowedPattern: ".+"
+  RemoveSumoResourcesOnDeleteStack:
+    AllowedValues:
+      - true
+      - false
+    Default: false
+    Description: To delete collector, sources and app when stack is deleted, set this parameter to true. Default is true.
+    Type: String
+
+  InstallApp:
+    Type: String
+    Description: Install Sumo Logic App. Select Yes for different source category.
+    Default: 'Yes'
+    AllowedValues:
+      - 'Yes'
+      - 'No'
+  CollectorName:
+    Type: String
+    Description: Change the collector name to be created else default name will be used.
+    Default: AWS-Alb-Collector
+
+  CreateCloudWatchMetricsSource:
+    Type: String
+    Description: "Choose Yes to create Sumo Logic Cloud Watch Metrics Source."
+    Default: 'Yes'
+    AllowedValues:
+      - 'Yes'
+      - 'No'
+  CloudWatchMetricsSourceName:
+    Type: String
+    Description: Change the CloudWatch Metrics Source name to be created else default name will be used.
+    Default: AWS-Alb-CloudWatch-Metrics-Source
+  CloudWatchMetricsSourceCategoryName:
+    Type: String
+    Description: "Existing - Change to an existing Source Category from Sumo Logic if CloudWatch Metrics Source is not created.\n
+                  New - Default will be used if CloudWatch Metrics Source is Created"
+    Default: AWS/Alb/CloudWatch/Metrics
+
+Mappings:
+  RegionMap:
+    us-east-1:
+      bucketname: appdevzipfiles-us-east-1
+    us-east-2:
+      bucketname: appdevzipfiles-us-east-2
+    us-west-1:
+      bucketname: appdevzipfiles-us-west-1
+    us-west-2:
+      bucketname: appdevzipfiles-us-west-2
+    ap-south-1:
+      bucketname: appdevzipfiles-ap-south-1
+    ap-northeast-2:
+      bucketname: appdevzipfiles-ap-northeast-2
+    ap-southeast-1:
+      bucketname: appdevzipfiles-ap-southeast-1
+    ap-southeast-2:
+      bucketname: appdevzipfiles-ap-southeast-2
+    ap-northeast-1:
+      bucketname: appdevzipfiles-ap-northeast-1
+    ca-central-1:
+      bucketname: appdevzipfiles-ca-central-1
+    eu-central-1:
+      bucketname: appdevzipfiles-eu-central-1
+    eu-west-1:
+      bucketname: appdevzipfiles-eu-west-1
+    eu-west-2:
+      bucketname: appdevzipfiles-eu-west-2
+    eu-west-3:
+      bucketname: appdevzipfiles-eu-west-3
+    eu-north-1:
+      bucketname: appdevzipfiles-eu-north-1s
+    sa-east-1:
+      bucketname: appdevzipfiles-sa-east-1
+
+Conditions:
+  install_app: !Equals [!Ref InstallApp, 'Yes']
+  install_cloud_watch_metric_source: !Equals [!Ref CreateCloudWatchMetricsSource, 'Yes']
+  install_collector: !Condition install_cloud_watch_metric_source
+  install_nested_stack: !Or
+    - !Condition install_cloud_watch_metric_source
+    - !Condition install_collector
+    - !Condition install_app
+
+Resources:
+  SumoLogicHelperRole:
+    Type: AWS::IAM::Role
+    Properties:
+      AssumeRolePolicyDocument:
+        Version: '2012-10-17'
+        Statement:
+          - Effect: Allow
+            Principal:
+              Service: lambda.amazonaws.com
+            Action: sts:AssumeRole
+      Path: /
+      Policies:
+        - PolicyName: awstestingLambdaExecutePolicies
+          PolicyDocument:
+            Version: '2012-10-17'
+            Statement:
+              - Effect: Allow
+                Action:
+                  - logs:CreateLogGroup
+                  - logs:CreateLogStream
+                  - logs:PutLogEvents
+                Resource: '*'
+
+  SumoLogicHelperFunction:
+    Type: 'AWS::Serverless::Function'
+    Properties:
+      FunctionName: !Join
+        - ""
+        - - "aws-testing-lambda-"
+          - !Select
+            - 0
+            - !Split
+              - "-"
+              - !Select
+                - 2
+                - !Split ["/", !Ref "AWS::StackId"]
+      Handler: main.handler
+      Runtime: python3.7
+      CodeUri:
+        Bucket: !FindInMap [RegionMap, !Ref 'AWS::Region', bucketname]
+        Key: "sumologic-aws-observability/SumoLogicAWSObservabilityHelper/SumoLogicAWSObservabilityHelper.zip"
+      MemorySize: 128
+      Timeout: 900
+      Role:
+        Fn::GetAtt:
+          - SumoLogicHelperRole
+          - Arn
+
+  SumoRole:
+    Type: AWS::IAM::Role
+    Properties:
+      AssumeRolePolicyDocument:
+        Version: '2012-10-17'
+        Statement:
+          - Effect: Allow
+            Principal:
+              AWS: arn:aws:iam::926226587429:root
+            Action: sts:AssumeRole
+            Condition:
+              StringEquals:
+                sts:ExternalId: !Sub "${SumoDeployment}:${SumoOrganizationId}"
+      Path: "/"
+      Policies:
+        - PolicyName: SumoLogicAwsSourcesPolicies
+          PolicyDocument:
+            Version: '2012-10-17'
+            Statement:
+              - Effect: Allow
+                Action:
+                  - s3:GetObject
+                  - s3:GetObjectVersion
+                  - s3:ListBucketVersions
+                  - s3:ListBucket
+                  - tag:GetResources
+                  - cloudwatch:ListMetrics
+                  - cloudwatch:GetMetricStatistics
+                Resource: "*"
+
+  sumoNestedAppStack:
+    Type: AWS::CloudFormation::Stack
+    Condition: install_nested_stack
+    Properties:
+      TemplateURL: ""
+      Parameters:
+        ParentStackName: !If [install_nested_stack, "MasterTemplate", "DoNotInstall"]
+        ServiceToken: !GetAtt SumoLogicHelperFunction.Arn
+        RoleArn: !GetAtt SumoRole.Arn
+        SumoDeployment: !Ref SumoDeployment
+        SumoAccessID: !Ref SumoAccessID
+        SumoAccessKey: !Ref SumoAccessKey
+        SumoOrganizationId: !Ref SumoOrganizationId
+        RemoveSumoResourcesOnDeleteStack: !Ref RemoveSumoResourcesOnDeleteStack
+        CollectorName: !Ref CollectorName
+        InstallApp: !Ref InstallApp
+        CreateCloudWatchMetricsSource: !Ref CreateCloudWatchMetricsSource
+        CloudWatchMetricsSourceName: !Ref CloudWatchMetricsSourceName
+        CloudWatchMetricsSourceCategoryName: !Ref CloudWatchMetricsSourceCategoryName

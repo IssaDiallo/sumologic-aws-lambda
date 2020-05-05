@@ -1,0 +1,69 @@
+{
+  "Global": {
+    "TemplatePath": "../templates/ParentTemplate.yaml",
+    "TestProjectName": "BasicTestProject",
+    "GlobalParameters": {
+      "SumoDeployment": "us1",
+      "SumoAccessID": "Parameter_value_2",
+      "SumoAccessKey": "Parameter_value_1",
+      "SumoOrganizationId": "Parameter_value_2",
+      "RemoveSumoResourcesOnDeleteStack": "true"
+    }
+  },
+  "Tests": [
+    {
+      "TestName": "Do_Not_Install_Nested_Stack",
+      "Regions": [
+        "us-east-1"
+      ],
+      "Parameters": "Do_Not_Install_Nested_Stack.json",
+      "Assertions": [
+        {
+          "ResourceName": "SumoLogicHelperRole",
+          "ResourceType": "AWS::IAM::Role"
+        },
+        {
+          "ResourceName": "SumoLogicHelperFunction",
+          "ResourceType": "AWS::Serverless::Function"
+        },
+        {
+          "ResourceName": "SumoRole",
+          "ResourceType": "AWS::IAM::Role"
+        }
+      ]
+    },
+    {
+      "TestName": "Install_Nested_Stack",
+      "Regions": [
+        "us-east-1"
+      ],
+      "Parameters": "Install_Nested_Stack.json",
+      "Skip": true,
+      "Assertions": [
+        {
+          "ResourceName": "SumoLogicHelperRole",
+          "ResourceType": "AWS::IAM::Role"
+        },
+        {
+          "ResourceName": "SumoLogicHelperFunction",
+          "ResourceType": "AWS::Serverless::Function"
+        },
+        {
+          "ResourceName": "SumoRole",
+          "ResourceType": "AWS::IAM::Role"
+        },
+        {
+          "ResourceName": "sumoNestedAppStack",
+          "ResourceType": "AWS::CloudFormation::Stack",
+          "Assert": {
+            "CollectorName": "Install_Nested_Stack",
+            "InstallApp": "Yes",
+            "CreateCloudWatchMetricsSource": "Yes",
+            "CloudWatchMetricsSourceName": "My Source",
+            "CloudWatchMetricsSourceCategoryName": "Labs/tst/json"
+          }
+        }
+      ]
+    }
+  ]
+}
