@@ -1,0 +1,7 @@
+{
+  "InstallApp": "Yes",
+  "CollectorName": "*",
+  "CreateCloudWatchMetricsSource": "No",
+  "CloudWatchMetricsSourceName": "Parameter_value_2",
+  "CloudWatchMetricsSourceCategoryName": "Parameter_value_1"
+}

@@ -1,0 +1,86 @@
+{
+  "Global": {
+    "TemplatePath": "../templates/template.yaml",
+    "TestProjectName": "BasicTestProject",
+    "GlobalParameters": {
+      "SumoDeployment": "Parameter_value_1",
+      "SumoAccessID": "Parameter_value_2",
+      "SumoAccessKey": "Parameter_value_1",
+      "SumoOrganizationId": "Parameter_value_2",
+      "RemoveSumoResourcesOnDeleteStack": "Parameter_value_1"
+    }
+  },
+  "Tests": [
+    {
+      "TestName": "Test1",
+      "Regions": [
+        "us-east-1"
+      ],
+      "Parameters": "parameter.json",
+      "Assertions": [
+        {
+          "ResourceName": "kdnlvsdkl",
+          "ResourceType": "Custom::App"
+        },
+        {
+          "ResourceName": "SumoLogicHelperFunction",
+          "ResourceType": "Custom::App"
+        },
+        {
+          "ResourceName": "SumoLogicHelperFunction",
+          "ResourceType": "Custom::App"
+        },
+        {
+          "ResourceName": "sumoApp",
+          "ResourceType": "Custom::App",
+          "Assert": {
+            "AppName": "AWS Observability Alb App",
+            "AppSources": {
+              "metricsrc": "_sourceCategory=asasdsaas",
+              "logsrc": "_sourceCategory=Parameter_value_1"
+            }
+          }
+        },
+        {
+          "ResourceName": "sumoAnotherApp",
+          "ResourceType": "Custom::App",
+          "Assert": {
+            "AppName": "AWS Alb App",
+            "AppSources": {
+              "metricsrc": "_sourceCategory=myconstantvalue",
+              "logsrc": "_sourceCategory=myconstantvalue"
+            }
+          }
+        }
+      ]
+    },
+    {
+      "TestName": "Test2",
+      "Regions": [
+        "us-east-1"
+      ],
+      "Parameters": "parameter.json",
+      "Assertions": [
+        {
+          "ResourceName": "SumoLogicHelperRole",
+          "ResourceType": "Custom::App"
+        },
+        {
+          "ResourceName": "SumoLogicHelperFunction",
+          "ResourceType": "Custom::App"
+        },
+        {
+          "ResourceName": "sumoApp",
+          "ResourceType": "Custom::App",
+          "Assert": {
+            "AppName": "AWS Observability Alb App",
+            "AppSources": {
+              "metricsrc": "_sourceCategory=asasdsaas",
+              "logsrc": "_sourceCategory=Parameter_value_1"
+            }
+          }
+        }
+      ]
+    }
+  ]
+}

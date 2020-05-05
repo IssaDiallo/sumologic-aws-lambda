@@ -1,0 +1,109 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema",
+  "$id": "http://example.com/example.json",
+  "type": "object",
+  "description": "The root schema comprises the entire JSON document.",
+  "additionalProperties": true,
+  "required": [
+    "Global",
+    "Tests"
+  ],
+  "properties": {
+    "Global": {
+      "$id": "#/properties/Global",
+      "type": "object",
+      "additionalProperties": true,
+      "required": [
+        "TemplatePath",
+        "TestProjectName"
+      ],
+      "properties": {
+        "TemplatePath": {
+          "$id": "#/properties/Global/properties/TemplatePath",
+          "type": "string"
+        },
+        "TestProjectName": {
+          "$id": "#/properties/Global/properties/TestProjectName",
+          "type": "string"
+        },
+        "GlobalParameters": {
+          "$id": "#/properties/Global/properties/GlobalParameters",
+          "type": "object",
+          "additionalProperties": {
+            "type": "string"
+          }
+        }
+      }
+    },
+    "Tests": {
+      "$id": "#/properties/Tests",
+      "type": "array",
+      "additionalItems": true,
+      "items": {
+        "$id": "#/properties/Tests/items",
+        "type": "object",
+        "additionalProperties": true,
+        "required": [
+          "TestName",
+          "Regions",
+          "Parameters",
+          "Assertions"
+        ],
+        "properties": {
+          "TestName": {
+            "$id": "#/properties/Tests/items/properties/TestName",
+            "type": "string"
+          },
+          "Skip": {
+            "$id": "#/properties/Tests/items/properties/Skip",
+            "type": "boolean",
+            "default": false
+          },
+          "Regions": {
+            "$id": "#/properties/Tests/items/properties/Regions",
+            "type": "array",
+            "items": {
+              "oneOf": [
+                {
+                  "type": "string"
+                }
+              ]
+            }
+          },
+          "Parameters": {
+            "$id": "#/properties/Tests/items/properties/Parameters",
+            "type": "string"
+          },
+          "Assertions": {
+            "$id": "#/properties/Tests/items/properties/Assertions",
+            "type": "array",
+            "additionalItems": true,
+            "items": {
+              "$id": "#/properties/Tests/items/properties/Assertions/items",
+              "type": "object",
+              "additionalProperties": true,
+              "required": [
+                "ResourceName",
+                "ResourceType"
+              ],
+              "properties": {
+                "ResourceName": {
+                  "$id": "#/properties/Tests/items/properties/Assertions/items/properties/ResourceName",
+                  "type": "string"
+                },
+                "ResourceType": {
+                  "$id": "#/properties/Tests/items/properties/Assertions/items/properties/ResourceType",
+                  "type": "string"
+                },
+                "Assert": {
+                  "$id": "#/properties/Tests/items/properties/Assertions/items/properties/Assert",
+                  "type": "object"
+                }
+              }
+            }
+          }
+        }
+      }
+    }
+  }
+}

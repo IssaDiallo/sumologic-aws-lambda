@@ -1,0 +1,41 @@
+{
+    "Pre-Deployment": {
+        "CFN-NAG": [
+            {
+                "Level": "Warning",
+                "Location": [
+                    {
+                        "LineNumber": 160
+                    },
+                    {
+                        "LineNumber": 217
+                    }
+                ],
+                "TestName": "",
+                "Resources": [
+                    "SumoLogicHelperRole",
+                    "SumoRole"
+                ],
+                "Message": "W11 - IAM role should not allow * resource on its permissions policy"
+            },
+            {
+                "Level": "Warning",
+                "Location": [
+                    {
+                        "LineNumber": 160
+                    },
+                    {
+                        "LineNumber": 217
+                    }
+                ],
+                "TestName": "",
+                "Resources": [
+                    "SumoLogicHelperRole",
+                    "SumoRole"
+                ],
+                "Message": "W11 - IAM role should not allow * resource on its permissions policy"
+            }
+        ]
+    },
+    "Post-Deployment": {}
+}

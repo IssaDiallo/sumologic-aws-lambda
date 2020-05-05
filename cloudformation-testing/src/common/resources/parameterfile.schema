@@ -1,0 +1,13 @@
+{
+  "type": "object",
+  "additionalProperties": {
+    "oneOf": [
+      {
+        "type": "string"
+      },
+      {
+        "type": "number"
+      }
+    ]
+  }
+}
