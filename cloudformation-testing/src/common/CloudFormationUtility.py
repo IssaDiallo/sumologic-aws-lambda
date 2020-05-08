@@ -175,7 +175,7 @@ class Stack(object):
     def delete_stack(self):
         current_status = self._check_status()
         self.logger.info("Starting Stack %s deletion with current status as %s" % (self.stack_name, current_status))
-        while current_status != "STACK_DELETED":
+        for i in range(1, 10):
             if current_status == "DELETE_FAILED":
                 failed_resources = self.fetch_resources().filter({"ResourceStatus": "DELETE_FAILED"})
                 self.logger.info("Retain Resources %s and delete the stack %s again." % (
@@ -184,8 +184,14 @@ class Stack(object):
             else:
                 self.cf_client.delete_stack(StackName=self.stack_name)
             current_status = self._check_status()
-        self.logger.info("Complete Stack %s deletion with current status as STACK_DELETED" % self.stack_name)
-        return "STACK_DELETED"
+
+            if current_status != "STACK_DELETED":
+                continue
+            else:
+                self.logger.info("Complete Stack %s deletion with current status as STACK_DELETED" % self.stack_name)
+                break
+
+        return current_status
 
     def fetch_resources(self):
         resources = Resources()

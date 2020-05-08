@@ -84,15 +84,10 @@ class Validate(object):
                     status, deployment_errors = cfn.deploy_template()
                     if deployment_errors:
                         total_validation_errors.extend(deployment_errors)
-                    else:
-                        self.logger.info("CloudFormation Deployment complete for Test Case %s" % test_name)
                 status = "FAIL" if len(total_validation_errors) > 0 else "PASS"
             except Exception as e:
                 status = "FAIL"
                 total_validation_errors = [{"Level": "Error", "Message": str(e)}]
-            finally:
-                # Delete Stacks properly
-                cfn.delete_stack()
             return status, total_validation_errors
 
     def _validate_parameters_provided(self, assert_parameters):

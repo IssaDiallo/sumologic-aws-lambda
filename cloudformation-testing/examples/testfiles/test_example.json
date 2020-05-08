@@ -14,13 +14,15 @@
     {
       "TestName": "Do_Not_Install_Nested_Stack",
       "Regions": [
-        "us-east-1"
+        "ap-south-1"
       ],
       "Parameters": "Do_Not_Install_Nested_Stack.json",
       "Assertions": [
         {
-          "ResourceName": "SumoLogicHelperRole",
-          "ResourceType": "AWS::IAM::Role"
+          "AssertType": "ResourceExistence",
+          "ResourceName": "bdbfjsdvjsvks",
+          "ResourceType": "AWS::IAM::Role",
+          "ErrorMessage": ""
         },
         {
           "ResourceName": "SumoLogicHelperFunction",
@@ -42,11 +44,13 @@
       "Assertions": [
         {
           "ResourceName": "SumoLogicHelperRole",
-          "ResourceType": "AWS::IAM::Role"
+          "ResourceType": "AWS::IAM::Role",
+          "AssertType": "Output"
         },
         {
           "ResourceName": "SumoLogicHelperFunction",
-          "ResourceType": "AWS::Serverless::Function"
+          "ResourceType": "AWS::Serverless::Function",
+          "AssertType": "ResourceExistence"
         },
         {
           "ResourceName": "SumoRole",
@@ -55,6 +59,7 @@
         {
           "ResourceName": "sumoNestedAppStack",
           "ResourceType": "AWS::CloudFormation::Stack",
+          "AssertType": "PropertyCheck",
           "Assert": {
             "CollectorName": "Install_Nested_Stack",
             "InstallApp": "Yes",
